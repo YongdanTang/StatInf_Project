@@ -1,0 +1,126 @@
+---
+title: 'StatInf_Project_2: Guinea Pig Tooth Growth Length by Suppliments and Doses'
+output: word_document
+---
+**Yongdan Tang**
+
+*data loading and background processing R codes are hidden to save space*
+
+```{r setting up, echo=FALSE, message=FALSE}
+require(knitr)
+library(ggplot2)
+library(dplyr)
+```
+
+## 1. Loading data and basic data summary
+It is understood that there are 60 guinea pigs for 60 observations according to [this post](https://class.coursera.org/statinference-012/forum/thread?thread_id=88#post-318) thanks to Ray Jones on the same Coursera class. So paired test is clearly **NOT** appropriate in this case. 
+
+```{r summarizing data, echo=FALSE, results='markup'}
+data(ToothGrowth)
+attach(ToothGrowth)
+summary(ToothGrowth)
+table(supp)
+table(dose)
+
+```
+The observation of the dataset ToothGrowth confirmed that there are 10 guinea pigs in each group, each group given 1 in 6 combinations of the following 3 doses of 2 suppliments, so 60 guinea pigs in total.  
+dose = 0.5mg / 1mg / 2mg        
+supp = Orange Juice "OJ" / Vitamin C "VC" 
+
+
+```{r initial plot, echo=FALSE, message=FALSE}
+require(grid)
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+p1 <- ggplot(ToothGrowth, aes(x = dose, y = len, color = supp)) + geom_point(size = 4) + ggtitle("Tooth Growth Length\n by Different Doses") + labs(x = "Dose", y = "Tooth Growth Length") + theme(legend.position = "bottom")
+
+p2 <- ggplot(ToothGrowth, aes(x = supp, y = len, color = as.factor(dose))) + geom_point(size = 4) + ggtitle("Tooth Growth Length\n by Different Suppliments") + labs(x = "Suppliment", y = "Tooth Growth Length") + theme(legend.position = "bottom")
+
+multiplot(p1, p2, cols=2)
+```
+
+So from the observation and plots above, the means of Tooth Growth Length from different doses look different and the means of Tooth Growth Length from different suppliments look not so different.
+
+## 2. Hypothesis Testing:
+```{r evaluation, echo=TRUE}
+g_d5 <- ToothGrowth[dose %in% 0.5, ]$len
+g_d10 <- ToothGrowth[dose %in% 1.0, ]$len
+g_d20 <- ToothGrowth[dose %in% 2.0, ]$len
+g_vc <- ToothGrowth[supp %in% "VC", ]$len
+g_oj <- ToothGrowth[supp %in% "OJ", ]$len
+
+
+```
+
+**Regarding different doses**
+
+*H0: No difference between mean growth length between 0.5mg, 1mg and 2mg doses of these 2 suppliments.*
+
+*Ha: The true difference in mean length from 0.5mg, 1mg and 2mg is not equal to ZERO.*
+
+```{r comparing doses}
+t.test(g_d5, g_d10, paired = FALSE, var.equal = FALSE)
+```
+@ 95% confdence, 0.5mg dose clearly had a shorter mean length than 1mg as the CI is -11.98 to -6.28. The p-value is extremely small which indicates a very small chance for the Null Hypothesis of no difference to still be valid. Hence we reject H0 here @ 95% confidence.
+
+
+```{r}
+t.test(g_d5, g_d20, paired = FALSE, var.equal = FALSE)
+```
+Similarly @ 95% confdence, 0.5mg dose clearly had a shorter mean length than 2mg as the CI is -18.16 to -12.83. The p-value is also extremely small which indicates a very small chance for the Null Hypothesis of no difference to still be valid. Hence we also reject H0 here @ 95% confidence.
+
+```{r}
+t.test(g_d10, g_d20, paired = FALSE, var.equal = FALSE)
+```
+Even for mean length between 1mg and 2mg, @ 95% confidence, 1mg also has a shorter length as the CI is -8.99 to -3.73. p-value is also very small indicating a clear difference between the mean length obtained at two different doses. Hence H0 is also rejected here @ 95% confidence.
+
+
+**Regarding different suppliment VC and OJ**
+
+*H0: There is no difference between the means obtained from VC and OJ groups.*
+
+*Ha: The true difference between the means obtained from VC and OJ groups is not equal to zero.*
+
+```{r comparing suppliments}
+t.test(g_oj, g_vc, paired = FALSE, var.equal = TRUE)
+t.test(g_oj, g_vc, paired = FALSE, var.equal = FALSE)
+```
+Assuming different or same sample variance, the results are similar in the end. 
+
+@ 95% confidence level, both CIs include 0, from -0.17 to 7.57. This implies that @ 95% confidence level, we cannot reject the H0 hypothesis that there is no difference between the mean length of tooth growth from VC and OJ.
+
+However, note that the p-value is about 6%, which means that the attained significance level is (1 - 6%) = 94% which the H0 can be rejected. This means that if we lower the confidence level to 93%, the H0 can be rejected. And the alternative hypothesis can be chosen at the confidence level @ 93%.
