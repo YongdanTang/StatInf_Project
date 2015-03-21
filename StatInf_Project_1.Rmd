@@ -1,0 +1,95 @@
+---
+title: Statistical Inference Project 1 - Application of Central Limit Theorem to Exponentially
+  Distributed Samples
+output: word_document
+---
+**Yongdan Tang**
+
+##Overview
+In this project, the mean of 40 exponentials was analyzed with the Central Limit Theorem (CLT). The exponential distribution is expressed as rexp(n, lambda) where lambda is set as 0.2 for all of the simulations.The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. The simulation is done a thousand times.
+
+##Simulation
+```{r load knitr, echo=FALSE, results='hide', message=FALSE}
+require(knitr)
+```
+
+The simulation parameters are defined here
+
+```{r simulations, echo=TRUE}
+lambda <- 0.2 #setting lambda as 0.2 as instructed
+th_mn <- 1/lambda #theoretical mean 
+th_sd <- 1/lambda #theoretical standard deviation
+th_v <- 1/lambda^2 #theoretical variance of the exponential distribution
+set.seed(1000)
+m <- NULL 
+for (i in 1:1000) m <- c(m, mean(rexp(40, lambda))) #run the simulation 1000 times, obtaining means of 40 exponentials and store it in m 
+v <- NULL
+for (i in 1:1000) v <- c(v, var(rexp(40, lambda))) #run the simulation 1000 times, obtaining the variance of 40 exponentials and store it in v
+sdv <- NULL
+for (i in 1:1000) sdv <- c(sdv, sd(rexp(40, lambda))) #run the simulation 1000 times, obtaining the standard deviation of 40 exponentials and store it in sdv
+```
+
+
+## 1. Sample Mean versus Theoretical Mean
+Plot the means of the 40 sample exponentials in a histogram, including the theoretical mean.
+
+```{r echo=FALSE}
+hist(m, 
+     main = "Comparing sample means of 40 exponentials\n vs. their theoretical mean\n (1000 simulations)", 
+     xlab = "sample mean of 40 exponentials")
+abline(v = th_mn, col = "red")
+text(x = th_mn, 
+     y = 220, 
+     labels = "theoretical mean of exponentials", 
+     col = "red", 
+     pos = 4)
+
+```
+
+As we can see from the plot, the means of 40 sample exponentials form a bell-shape centered around **5** which is exactly the theoretical mean. This shows that the distribution of means of the exponential samples is centered around its theoretical mean as the CLT indicates.
+
+## 2. Sample Variance versus Theoretical Variance
+The theoretical variance is plotted with the 1000 variances of the 40 samples below:
+
+
+```{r echo=FALSE}
+hist(v, 
+     main = "Comparing sample variances of 40 exponentials\n vs. their theoretical variance\n (1000 simulations)", 
+     xlab = "sample variance of 40 exponentials")
+abline(v = th_v, col = "green")
+text(x = th_v, 
+     y = 220, 
+     labels = "theoretical variance of exponentials", 
+     col = "green", 
+     pos = 4)
+```
+
+Again, the distribution of the sample variances of the 40 sample exponentials for 1000 simulations is centered around the theoretical variance of **25**. Though the sample variance spreads out a bit on the right, their densities can be seen to be fairly centered around the theoretical variance of **25**.
+
+#Distribution
+Based on the CLT,  $$\frac{\mbox{Estimate} - \mbox{Mean of estimate}}{\mbox{Std. Err. of estimate}}$$ has a distribution like that of a standard normal for large $n$. So we can plot that for these 1000 simulations to see if the distribution follows a typical bell shape that centers at **0**.
+
+
+```{r distribution, echo=TRUE}
+e <- (m - th_mn)/sdv #(sample mean - thereotical mean) / sample standard deviation; plot this in a histogram
+```
+
+
+
+
+```{r, echo=FALSE}
+hist(e, 
+     main = "Histogram of e for 40 sample exponentials\n (1000 simulations)", 
+     xlab = "e based on CLT", 
+     col = "cyan")
+abline(v = 0, col = "orange")
+text(x = 0, 
+     y = 220, 
+     labels = "center of a normal distribution", 
+     col = "orange", 
+     pos = 4)
+```
+
+As we can see, the $$\frac{\mbox{sample mean} - \mbox{theoretical mean}}{\mbox{Std. Dev. of samples}}$$ is a bell-shaped distribution centered around **0**. Hence we can say the sample mean is approximately normally distributed as
+$$\mbox{m  ~ N(theoretical mean, sdv)}$$
+
